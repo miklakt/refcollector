@@ -1,0 +1,96 @@
+# -------------------------------
+# Python
+# -------------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pdb
+*.egg
+*.egg-info/
+dist/
+build/
+*.so
+*.dll
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+pip-wheel-metadata/
+*.whl
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints/
+
+# MyPy / Pyright / Pyre / Pylint
+.mypy_cache/
+.pyright/
+.pyre/
+pylint.log
+
+# Coverage / testing
+.coverage
+coverage.xml
+htmlcov/
+pytest_cache/
+.cache/
+
+# -------------------------------
+# LaTeX build files
+# -------------------------------
+*.aux
+*.bbl
+*.blg
+*.brf
+*.fls
+*.fdb_latexmk
+*.ilg
+*.ind
+*.idx
+*.lof
+*.lot
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.synctex(busy)
+*.xdv
+
+# -------------------------------
+# Generated HTML dashboards
+# -------------------------------
+refs.html
+references.html
+*.refs.html
+
+# -------------------------------
+# OS-specific junk
+# -------------------------------
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+.nfs*
+
+# -------------------------------
+# Editor junk
+# -------------------------------
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# -------------------------------
+# PDF outputs (optional)
+# -------------------------------
+*.pdf

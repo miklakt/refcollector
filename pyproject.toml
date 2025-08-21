@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "refcollector"
+version = "0.1.0"
+description = "Collect LaTeX citations and map to PDF pages + lineno; generate an interactive HTML dashboard."
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [{name = "You"}]
+keywords = ["latex", "bibtex", "synctex", "pdftotext", "references", "citations", "html"]
+classifiers = [
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Topic :: Text Processing :: Markup :: LaTeX",
+  "Environment :: Console"
+]
+
+[project.scripts]
+collect-refs = "refcollector.collect_refs:main"
