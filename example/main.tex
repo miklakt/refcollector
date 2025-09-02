@@ -1,0 +1,64 @@
+\documentclass[a4paper,12pt]{article}
+
+% Packages
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{graphicx}
+\usepackage{amsmath, amssymb}
+\usepackage{hyperref} 
+\usepackage[
+backend=biber,
+natbib=true,
+style=numeric,
+sorting=none,
+doi=false,
+isbn=false,
+url=false,
+eprint=false
+]{biblatex}
+\addbibresource{biblio.bib}
+
+\usepackage[right]{lineno}
+\linenumbers
+
+\title{A Minimal LaTeX Example with References}
+\author{Your Name}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This is a short example demonstrating how to use citations and bibliographies in \LaTeX.
+\end{abstract}
+
+\section{Introduction}
+You can cite references in the text like this \cite{lamport1994latex} or like this \citep{knuth1984tex}.
+
+Sometimes, you might want multiple citations together \citep{knuth1984tex,mittelbach2004latex}.
+
+\section{Methodology}
+You can also add equations:
+\begin{equation}
+    E = mc^2
+\end{equation}
+as shown in \cite{einstein1905}.
+
+\section{Results}
+Figure~\ref{fig:example} shows a random image.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.4\linewidth]{example-image} % comes with LaTeX
+    \caption{A sample figure.}
+    \label{fig:example}
+\end{figure}
+
+\section{Conclusion}
+Using BibTeX makes it easy to manage references.
+
+% Bibliography section
+\printbibliography
+
+\end{document}

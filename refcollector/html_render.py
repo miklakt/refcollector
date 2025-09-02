@@ -29,10 +29,11 @@ HTML_TEMPLATE = Template(r"""<!doctype html>
     h1 { margin: 0.2rem 0 0.6rem; font-size: 1.35rem; letter-spacing: 0.2px; }
     .toolbar { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
     .group { display: flex; gap: 0.5rem; align-items: center; padding: 0.5rem 0; }
-    select, .pill { background: var(--card); color: var(--text); border: 1px solid var(--border); border-radius: 12px; padding: 0.35rem 0.6rem; font-size: 0.95rem; }
+    select, .pill, button { background: var(--card); color: var(--text); border: 1px solid var(--border); border-radius: 12px; padding: 0.35rem 0.6rem; font-size: 0.95rem; }
     select { cursor: pointer; }
+    button#printBtn { cursor: pointer; background: var(--accent); color: white; border: none; padding: 0.35rem 0.8rem; border-radius: 12px; }
     .pill { display: inline-flex; align-items: center; gap: 6px; background: var(--pill); border-color: var(--border); color: var(--accent2); font-weight: 600; }
-    .pill a { text-decoration: none; color: var(--accent2); }
+    .pill a { text-decoration: none; color: var(--accent2); font-weight: 600; }
     .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; padding: 1rem; }
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 0.9rem 0.95rem 0.7rem; box-shadow: var(--shadow); }
     .row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
@@ -50,6 +51,27 @@ HTML_TEMPLATE = Template(r"""<!doctype html>
     .occ-meta { color: var(--muted); font-size: 0.85rem; }
     .occ-text { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.88rem; white-space: pre-wrap; color: #2b3850; padding-top: 4px; }
     .mutetext { color: var(--muted); }
+
+    /* === PRINT-FRIENDLY STYLES === */
+    @media print {
+      .toolbar { display: none !important; }
+      details.abs, details.ctx { border: none; padding: 0; background: transparent; }
+
+      /* Hide only Abstract summary, keep occurrence labels */
+      details.abs > summary { display: none !important; }
+      details.ctx > summary { display: inline-flex !important; }
+
+      .cards { display: block; }
+      .card { break-inside: avoid; page-break-inside: avoid; margin-bottom: 12pt; }
+      .row { gap: 4px; }
+      .occ-meta { color: #000; }
+
+      a[href^="http"]::after {
+        content: " <" attr(href) ">";
+        font-size: 9pt;
+        color: #555;
+      }
+    }
   </style>
 </head>
 <body>
@@ -71,6 +93,9 @@ HTML_TEMPLATE = Template(r"""<!doctype html>
             <option value="year">Year</option>
             <option value="bib">.bib order</option>
           </select>
+        </div>
+        <div class="group">
+          <button id="printBtn">Save as PDF</button>
         </div>
       </div>
     </div>
@@ -102,19 +127,13 @@ HTML_TEMPLATE = Template(r"""<!doctype html>
 
     // Pills row: [order] [key] [link] [doi]
     const pillrow = e('div', {class:'row'});
-
-    // order pill with **bold** number
     const pillOrder = e('span', {class:'pill'});
-    const ordStrong = e('strong');
-    ordStrong.textContent = String(ref.orderNum ?? '');
-    pillOrder.appendChild(ordStrong);
+    pillOrder.innerHTML = '<strong>' + String(ref.orderNum ?? '') + '</strong>';
     pillrow.appendChild(pillOrder);
 
-    // key pill
     const pillKey = e('span', {class:'pill'});
     const strong = e('strong'); strong.textContent = ref.key || '(no key)';
     pillKey.appendChild(strong); pillrow.appendChild(pillKey);
-
 
     if (ref.url) {
       const pillUrl = e('span', {class:'pill'});
@@ -152,7 +171,6 @@ HTML_TEMPLATE = Template(r"""<!doctype html>
       const summary = e('summary');
 
       const meta = e('span', {class:'occ-meta'});
-      // labels for toggling view
       const texLabel = 'line ' + occ.line;
       let pdfLabel = '';
       if (occ.pdfPage != null) {
@@ -178,7 +196,7 @@ HTML_TEMPLATE = Template(r"""<!doctype html>
     card.setAttribute('data-key', ref.key);
     card.setAttribute('data-year', ref.year != null ? String(ref.year) : '');
     card.setAttribute('data-bib', String(ref.bibIndex ?? 0));
-    card.setAttribute('data-occ', String(ref.orderNum ?? 999999999)); // sort by pill number
+    card.setAttribute('data-occ', String(ref.orderNum ?? 999999999));
 
     return card;
   }
@@ -213,10 +231,62 @@ HTML_TEMPLATE = Template(r"""<!doctype html>
     } else if (mode === 'bib') {
       cards.sort((a,b) => getNum(a,'data-bib') - getNum(b,'data-bib'));
     } else {
-      // First occurrence == number shown in the first pill
       cards.sort((a,b) => getNum(a,'data-occ') - getNum(b,'data-occ'));
     }
     cards.forEach(c => cont.appendChild(c));
+  }
+
+  // ==== PRINTING LOGIC ====
+  let _prevOpen = new WeakMap();
+  let _prevViewValue = null;
+
+  function expandAllDetails() {
+    document.querySelectorAll('details').forEach(d => {
+      if (d.open) _prevOpen.set(d, true);
+      d.setAttribute('open', '');
+    });
+  }
+  function restoreDetails() {
+    document.querySelectorAll('details').forEach(d => {
+      if (!_prevOpen.get(d)) d.removeAttribute('open');
+    });
+    _prevOpen = new WeakMap();
+  }
+
+  function switchToPdfViewForPrint() {
+    const occSel = document.getElementById('occView');
+    if (!occSel) return;
+    _prevViewValue = occSel.value;
+    occSel.value = 'pdf';
+    applyOccView('pdf');
+  }
+  function restoreViewAfterPrint() {
+    const occSel = document.getElementById('occView');
+    if (!occSel) return;
+    if (_prevViewValue) {
+      occSel.value = _prevViewValue;
+      applyOccView(_prevViewValue);
+    }
+    _prevViewValue = null;
+  }
+
+  window.addEventListener('beforeprint', () => {
+    switchToPdfViewForPrint();
+    expandAllDetails();
+  });
+  window.addEventListener('afterprint', () => {
+    restoreDetails();
+    restoreViewAfterPrint();
+  });
+
+  function setupPrintButton() {
+    const btn = document.getElementById('printBtn');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      switchToPdfViewForPrint();
+      expandAllDetails();
+      setTimeout(() => window.print(), 0);
+    });
   }
 
   (function(){
@@ -227,11 +297,13 @@ HTML_TEMPLATE = Template(r"""<!doctype html>
     sortSel.value = 'occ'; sortCards('occ');
     occSel.addEventListener('change', () => applyOccView(occSel.value));
     sortSel.addEventListener('change', () => sortCards(sortSel.value));
+    setupPrintButton();
   })();
 </script>
 </body>
 </html>
 """)
+
 
 def render_html(page_title: str, cards: List[Dict[str, Any]], default_view: str) -> str:
     page_title_safe = html.escape(page_title)
